@@ -18,7 +18,7 @@ ConcurrentLinkedQueue的数据结构，如下图所示：![2c9f34f0d8819f5a0c03e
 
 ### ConcurrentLinkedQueue函数列表
 
-```
+```java
 // 创建一个最初为空的 ConcurrentLinkedQueue。
 ConcurrentLinkedQueue()
 // 创建一个最初包含给定 collection 元素的 ConcurrentLinkedQueue，按照此 collection 迭代器的遍历顺序来添加元素。
@@ -52,7 +52,7 @@ Object[] toArray()
 下面从ConcurrentLinkedQueue的创建，添加，删除这几个方面对它进行分析。
 **1 创建**
 下面以ConcurrentLinkedQueue()来进行说明。
-```
+```java
 public ConcurrentLinkedQueue() {
     head = tail = new Node<E>(null);
 }
@@ -60,13 +60,13 @@ public ConcurrentLinkedQueue() {
 说明：在构造函数中，新建了一个“内容为null的节点”，并设置表头head和表尾tail的值为新节点。
 
 head和tail的定义如下：
-```
+```java
 private transient volatile Node<E> head;
 private transient volatile Node<E> tail;
 ```
 head和tail都是volatile类型，他们具有volatile赋予的含义：“即对一个volatile变量的读，总是能看到（任意线程）对这个volatile变量最后的写入”。
 Node的声明如下：
-```
+```java
 private static class Node<E> {
     volatile E item;
     volatile Node<E> next;
@@ -114,7 +114,7 @@ Node是个单向链表节点，next用于指向下一个Node，item用于存储�
 
 下面以add(E e)为例对ConcurrentLinkedQueue中的添加进行说明。
 
-```
+```java
 public boolean add(E e) {
     return offer(e);
 }
@@ -122,7 +122,7 @@ public boolean add(E e) {
 说明：add()实际上是调用的offer()来完成添加操作的。
 
 offer()的源码如下：
-```
+```java
 public boolean offer(E e) {
     // 检查e是不是null，是的话抛出NullPointerException异常。
     checkNotNull(e);
@@ -162,7 +162,7 @@ p.casNext(null, newNode)，是调用CAS对p进行操作。若“p的下一个节
 
 情况3 -- 其它。
 我们将p = (p != t && t != (t = tail)) ? t : q;转换成如下代码。
-```
+```java
 if (p==t) {
     p = q;
 } else {
@@ -179,7 +179,7 @@ if (p==t) {
 
 checkNotNull()的源码如下：
 
-```
+```java
 private static void checkNotNull(Object v) {
     if (v == null)
         throw new NullPointerException();
@@ -189,7 +189,7 @@ private static void checkNotNull(Object v) {
 
 下面以poll()为例对ConcurrentLinkedQueue中的删除进行说明。
 
-```
+```java
 public E poll() {
     // 设置“标记”
     restartFromHead:
@@ -229,7 +229,7 @@ public E poll() {
 p.casItem(item, null) -- 调用CAS函数，比较“节点p的数据值”与item是否相等，是的话，设置节点p的数据值为null。
 在情况1发生时，先比较“p和h”，若p!=h，即表头发生了变化，则调用updateHead()更新表头；然后返回删除节点的item值。
 updateHead()的源码如下：
-```
+```java
 final void updateHead(Node<E> h, Node<E> p) {
     if (h != p && casHead(h, p))
         h.lazySetNext(h);
@@ -255,7 +255,7 @@ putOrderedObject()函数，我们在前面一章“TODO”中介绍过。h.lazyS
 设置p=q。
 
 ### ConcurrentLinkedQueue示例
-```
+```java
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -274,7 +274,7 @@ public class ConcurrentLinkedQueueDemo1 {
     //private static Queue<String> queue = new LinkedList<String>();
     private static Queue<String> queue = new ConcurrentLinkedQueue<String>();
     public static void main(String[] args) {
-    
+
         // 同时启动两个线程对queue进行操作！
         new MyThread("ta").start();
         new MyThread("tb").start();
@@ -312,15 +312,15 @@ public class ConcurrentLinkedQueueDemo1 {
 ```
 ta1, ta1, tb1, tb1,
 
-ta1, ta1, tb1, tb1, ta2, ta2, tb2, 
-tb2, 
-ta1, ta1, tb1, tb1, ta2, ta2, tb2, tb2, ta3, tb3, 
-ta3, ta1, tb3, tb1, ta4, 
-ta2, ta1, tb2, tb1, ta3, ta2, tb3, tb2, ta4, ta3, tb4, 
-tb3, ta1, ta4, tb1, tb4, ta2, ta5, 
-tb2, ta1, ta3, tb1, tb3, ta2, ta4, tb2, tb4, ta3, ta5, tb3, tb5, 
-ta4, ta1, tb4, tb1, ta5, ta2, tb5, tb2, ta6, 
-ta3, ta1, tb3, tb1, ta4, ta2, tb4, tb2, ta5, ta3, tb5, tb3, ta6, ta4, tb6, 
+ta1, ta1, tb1, tb1, ta2, ta2, tb2,
+tb2,
+ta1, ta1, tb1, tb1, ta2, ta2, tb2, tb2, ta3, tb3,
+ta3, ta1, tb3, tb1, ta4,
+ta2, ta1, tb2, tb1, ta3, ta2, tb3, tb2, ta4, ta3, tb4,
+tb3, ta1, ta4, tb1, tb4, ta2, ta5,
+tb2, ta1, ta3, tb1, tb3, ta2, ta4, tb2, tb4, ta3, ta5, tb3, tb5,
+ta4, ta1, tb4, tb1, ta5, ta2, tb5, tb2, ta6,
+ta3, ta1, tb3, tb1, ta4, ta2, tb4, tb2, ta5, ta3, tb5, tb3, ta6, ta4, tb6,
 tb4, ta5, tb5, ta6, tb6,
 ```
 结果说明：如果将源码中的queue改成LinkedList对象时，程序会产生ConcurrentModificationException异常。

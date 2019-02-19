@@ -38,7 +38,7 @@ ConcurrentSkipListMap的数据结构，如下图所示：![7d7d48450f836bf600443
 (03) Index是跳表中的索引，它包含“右索引的指针(right)”，“下索引的指针(down)”和“哈希表节点node”。node是Node的对象，Node也是ConcurrentSkipListMap中的内部类。
 
 ### ConcurrentSkipListMap函数列表
-```
+```java
 // 构造一个新的空映射，该映射按照键的自然顺序进行排序。
 ConcurrentSkipListMap()
 // 构造一个新的空映射，该映射按照指定的比较器进行排序。
@@ -135,7 +135,7 @@ Collection<V> values()
 下面从ConcurrentSkipListMap的添加，删除，获取这3个方面对它进行分析。
 **1. 添加**
 下面以put(K key, V value)为例，对ConcurrentSkipListMap的添加方法进行说明。
-```
+```java
 public V put(K key, V value) {
     if (value == null)
         throw new NullPointerException();
@@ -144,7 +144,7 @@ public V put(K key, V value) {
 ```
 实际上，put()是通过doPut()将key-value键值对添加到ConcurrentSkipListMap中的。
 doPut()的源码如下：
-```
+```java
 private V doPut(K kkey, V value, boolean onlyIfAbsent) {
     Comparable<? super K> key = comparable(kkey);
     for (;;) {
@@ -208,7 +208,7 @@ private V doPut(K kkey, V value, boolean onlyIfAbsent) {
 第3步：更新跳表。
 即，随机获取一个level，然后在“跳表”的第1层～第level层之间，每一层都插入节点z；在第level层之上就不再插入节点了。若level数值大于“跳表的层次”，则新建一层。
 主干部分“对应的精简后的doPut()的代码”如下(仅供参考)：
-```
+```java
 private V doPut(K kkey, V value, boolean onlyIfAbsent) {
     Comparable<? super K> key = comparable(kkey);
     for (;;) {
@@ -217,7 +217,7 @@ private V doPut(K kkey, V value, boolean onlyIfAbsent) {
         // 设置n为key的后继节点
         Node<K,V> n = b.next;
         for (;;) {
-            
+
             // 新建节点(对应是“要被插入的键值对”)
             Node<K,V> z = new Node<K,V>(kkey, value, n);
             // 设置“b的后继节点”为z
@@ -236,14 +236,14 @@ private V doPut(K kkey, V value, boolean onlyIfAbsent) {
 理清主干之后，剩余的工作就相对简单了。主要是上面几步的对应算法的具体实现，以及多线程相关情况的处理！
 **2. 删除**
 下面以remove(Object key)为例，对ConcurrentSkipListMap的删除方法进行说明。
-```
+```java
 public V remove(Object key) {
     return doRemove(key, null);
 }
 ```
 实际上，remove()是通过doRemove()将ConcurrentSkipListMap中的key对应的键值对删除的。
 doRemove()的源码如下：
-```
+```java
 final V doRemove(Object okey, Object value) {
     Comparable<? super K> key = comparable(okey);
     for (;;) {
@@ -307,7 +307,7 @@ final V doRemove(Object okey, Object value) {
 第3步：更新跳表。
 即，遍历跳表，删除每一层的“key节点”(如果存在的话)。如果删除“key节点”之后，跳表的层次需要-1；则执行相应的操作！
 主干部分“对应的精简后的doRemove()的代码”如下(仅供参考)：
-```
+```java
 final V doRemove(Object okey, Object value) {
     Comparable<? super K> key = comparable(okey);
     for (;;) {
@@ -336,13 +336,13 @@ final V doRemove(Object okey, Object value) {
 ```
 **3. 获取**
 下面以get(Object key)为例，对ConcurrentSkipListMap的获取方法进行说明
-```
+```java
 public V get(Object key) {
     return doGet(key);
 }
 ```
 doGet的源码如下：
-```
+```java
 private V doGet(Object okey) {
     Comparable<? super K> key = comparable(okey);
     for (;;) {
@@ -357,7 +357,7 @@ private V doGet(Object okey) {
 }
 ```
 说明：doGet()是通过findNode()找到并返回节点的。
-```
+```java
 private Node<K,V> findNode(Comparable<? super K> key) {
     for (;;) {
         // 找到key的前继节点
@@ -402,7 +402,7 @@ private Node<K,V> findNode(Comparable<? super K> key) {
 具体是通过比较“n的键值”和“key”的大小。如果相等，则n就是所要查找的键。
 
 ### ConcurrentSkipListMap示例
-```
+```java
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -412,14 +412,14 @@ import java.util.concurrent.*;
  *   下面是“多个线程同时操作并且遍历map”的示例
  *   (01) 当map是ConcurrentSkipListMap对象时，程序能正常运行。
  *   (02) 当map是TreeMap对象时，程序会产生ConcurrentModificationException异常。
-
+ */
 public class ConcurrentSkipListMapDemo1 {
 
     // TODO: map是TreeMap对象时，程序会出错。
     //private static Map<String, String> map = new TreeMap<String, String>();
     private static Map<String, String> map = new ConcurrentSkipListMap<String, String>();
     public static void main(String[] args) {
-    
+
         // 同时启动两个线程对map进行操作！
         new MyThread("a").start();
         new MyThread("b").start();
@@ -459,15 +459,15 @@ public class ConcurrentSkipListMapDemo1 {
 ```
 (a1, 0), (a1, 0), (b1, 0), (b1, 0),
 
-(a1, 0), (b1, 0), (b2, 0), 
-(a1, 0), (a1, 0), (a2, 0), (a2, 0), (b1, 0), (b1, 0), (b2, 0), (b2, 0), (b3, 0), 
-(b3, 0), (a1, 0), 
-(a2, 0), (a3, 0), (a1, 0), (b1, 0), (a2, 0), (b2, 0), (a3, 0), (b3, 0), (b1, 0), (b4, 0), 
-(b2, 0), (a1, 0), (b3, 0), (a2, 0), (b4, 0), 
-(a3, 0), (a1, 0), (a4, 0), (a2, 0), (b1, 0), (a3, 0), (b2, 0), (a4, 0), (b3, 0), (b1, 0), (b4, 0), (b2, 0), (b5, 0), 
-(b3, 0), (a1, 0), (b4, 0), (a2, 0), (b5, 0), 
-(a3, 0), (a1, 0), (a4, 0), (a2, 0), (a5, 0), (a3, 0), (b1, 0), (a4, 0), (b2, 0), (a5, 0), (b3, 0), (b1, 0), (b4, 0), (b2, 0), (b5, 0), (b3, 0), (b6, 0), 
-(b4, 0), (a1, 0), (b5, 0), (a2, 0), (b6, 0), 
+(a1, 0), (b1, 0), (b2, 0),
+(a1, 0), (a1, 0), (a2, 0), (a2, 0), (b1, 0), (b1, 0), (b2, 0), (b2, 0), (b3, 0),
+(b3, 0), (a1, 0),
+(a2, 0), (a3, 0), (a1, 0), (b1, 0), (a2, 0), (b2, 0), (a3, 0), (b3, 0), (b1, 0), (b4, 0),
+(b2, 0), (a1, 0), (b3, 0), (a2, 0), (b4, 0),
+(a3, 0), (a1, 0), (a4, 0), (a2, 0), (b1, 0), (a3, 0), (b2, 0), (a4, 0), (b3, 0), (b1, 0), (b4, 0), (b2, 0), (b5, 0),
+(b3, 0), (a1, 0), (b4, 0), (a2, 0), (b5, 0),
+(a3, 0), (a1, 0), (a4, 0), (a2, 0), (a5, 0), (a3, 0), (b1, 0), (a4, 0), (b2, 0), (a5, 0), (b3, 0), (b1, 0), (b4, 0), (b2, 0), (b5, 0), (b3, 0), (b6, 0),
+(b4, 0), (a1, 0), (b5, 0), (a2, 0), (b6, 0),
 (a3, 0), (a4, 0), (a5, 0), (a6, 0), (b1, 0), (b2, 0), (b3, 0), (b4, 0), (b5, 0), (b6, 0),
 ```
 结果说明：

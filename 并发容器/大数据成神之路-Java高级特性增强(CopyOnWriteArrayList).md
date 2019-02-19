@@ -35,7 +35,7 @@ CopyOnWriteArrayList的数据结构，如下图所示：![8c9a554d0e197a027a35fe
 2. **CopyOnWriteArrayList的“线程安全”机制** -- 是通过volatile和互斥锁来实现的。(01) CopyOnWriteArrayList是通过"volatile数组"来保存数据的。一个线程读取volatile数组时，总能看到其它线程对该volatile变量最后的写入;就这样，通过volatile提供了"读取到的数据总是最新的"这个机制的保证。(02) CopyOnWriteArrayList通过互斥锁来保护数据。在"添加/修改/删除"数据时，会先"获取互斥锁",再修改完毕之后，先将数据更新到“volatile数组”中，然后再"释放互斥锁",这样,就达到了保护数据的目的。 
 
 #### CopyOnWriteArrayList函数列表
-```
+```java
 // 创建一个空列表。
 CopyOnWriteArrayList()
 // 创建一个按 collection 的迭代器返回元素的顺序包含指定 collection 元素的列表。
@@ -109,7 +109,7 @@ String toString()
 下面我们从"创建,添加,删除,获取,遍历"这5个方面去分析CopyOnWriteArrayList的原理。
 **1. 创建**
 CopyOnWriteArrayList共3个构造函数。它们的源码如下：
-```
+```java
 public CopyOnWriteArrayList() {
     setArray(new Object[0]);
 }
@@ -126,7 +126,7 @@ public CopyOnWriteArrayList(E[] toCopyIn) {
 }
 ```
 说明：这3个构造函数都调用了setArray()，setArray()的源码如下：
-```
+```java
 private volatile transient Object[] array;
 final Object[] getArray() {
     return array;
@@ -138,7 +138,7 @@ final void setArray(Object[] a) {
 说明：setArray()的作用是给array赋值；其中，array是volatile transient Object[]类型，即array是“volatile数组”。关于volatile关键字，我们知道“volatile能让变量变得可见”，即对一个volatile变量的读，总是能看到（任意线程）对这个volatile变量最后的写入。正在由于这种特性，每次更新了“volatile数组”之后，其它线程都能看到对它所做的更新。关于transient关键字，它是在序列化中才起作用，transient变量不会被自动序列化。
 **2. 添加**
 以add(E e)为例，来对"CopyOnWriteArrayList"的添加操作进行说明。下面是add(E e)的代码:
-```
+```java
 public boolean add(E e) {
     final ReentrantLock lock = this.lock;
     // 获取“锁”
@@ -163,8 +163,8 @@ public boolean add(E e) {
 ```
 **说明:** add(E e)的作用就是将数据e添加到”volatile数组“中。它的实现方式是,新建一个数组,接着将原始的”volatile数组“的数据拷贝到新数组中，然后将新增数据也添加到新数组中:最后,将新数组赋值给”volatile数组“。在add(E e)中有两点需要关注。
 第一,在”添加操作“开始前，获取独占锁(lock)，若此时有需要线程要获取锁，则必须等待；在操作完毕后，释放独占锁(lock)，此时其它线程才能获取锁。通过独占锁，来防止多线程同时修改数据！lock的定义如下：
-```
-transient final ReentrantLock lock = 
+```java
+transient final ReentrantLock lock =
 new ReentrantLock();  
 ```
 第二,操作完毕时，会通过setArray()来更新”volatile数组“。而且，前面我们提过”即对一个volatile变量的读，总是能看到（任意线程）对这个volatile变量最后的写入“；这样，每次添加元素之后，其它线程都能看到新添加的元素。 
@@ -181,7 +181,7 @@ private E get(Object[] a, int index) {
 说明：get(int index)的实现很简单，就是返回"volatile数组"中的第index个元素。 
 **4. 删除**
 以remove(int index)为例，来对“CopyOnWriteArrayList的删除操作”进行说明。下面是remove(int index)的代码：
-```
+```java
 public E remove(int index) {
     final ReentrantLock lock = this.lock;
     // 获取“锁”
@@ -215,13 +215,13 @@ public E remove(int index) {
 **5. 遍历**
 以iterator()为例，来对CopyOnWriteArrayList的遍历操作进行说明。
 下面是iterator()的代码：
-```
+```java
 public Iterator<E> iterator() {
     return new COWIterator<E>(getArray(), 0);
 }
 ```
 说明：iterator()会返回COWIterator对象。COWIterator实现额ListIterator接口，它的源码如下：
-```
+```java
 private static class COWIterator&lt;E&gt; implements ListIterator&lt;E&gt; {
     private final Object[] snapshot;
     private int cursor;
@@ -280,7 +280,7 @@ private static class COWIterator&lt;E&gt; implements ListIterator&lt;E&gt; {
 
 #### CopyOnWriteArrayList示例
 下面，我们通过一个例子去对比ArrayList和CopyOnWriteArrayList。
-```
+```java
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -298,7 +298,7 @@ public class CopyOnWriteArrayListTest1 {
     //private static List<String> list = new ArrayList<String>();
     private static List<String> list = new CopyOnWriteArrayList<String>();
     public static void main(String[] args) {
-    
+
         // 同时启动两个线程对list进行操作！
         new MyThread("ta").start();
         new MyThread("tb").start();
@@ -334,17 +334,17 @@ public class CopyOnWriteArrayListTest1 {
 ```
 其中一次运行结果：
 ```
-ta-1, tb-1, ta-1, 
-tb-1, 
-ta-1, ta-1, tb-1, tb-1, tb-2, 
-tb-2, ta-1, ta-2, 
-tb-1, ta-1, tb-2, tb-1, ta-2, tb-2, tb-3, 
-ta-2, ta-1, tb-3, tb-1, ta-3, 
-tb-2, ta-1, ta-2, tb-1, tb-3, tb-2, ta-3, ta-2, tb-4, 
-tb-3, ta-1, ta-3, tb-1, tb-4, tb-2, ta-4, 
-ta-2, ta-1, tb-3, tb-1, ta-3, tb-2, tb-4, ta-2, ta-4, tb-3, tb-5, 
-ta-3, ta-1, tb-4, tb-1, ta-4, tb-2, tb-5, ta-2, ta-5, 
-tb-3, ta-1, ta-3, tb-1, tb-4, tb-2, ta-4, ta-2, tb-5, tb-3, ta-5, ta-3, tb-6, 
+ta-1, tb-1, ta-1,
+tb-1,
+ta-1, ta-1, tb-1, tb-1, tb-2,
+tb-2, ta-1, ta-2,
+tb-1, ta-1, tb-2, tb-1, ta-2, tb-2, tb-3,
+ta-2, ta-1, tb-3, tb-1, ta-3,
+tb-2, ta-1, ta-2, tb-1, tb-3, tb-2, ta-3, ta-2, tb-4,
+tb-3, ta-1, ta-3, tb-1, tb-4, tb-2, ta-4,
+ta-2, ta-1, tb-3, tb-1, ta-3, tb-2, tb-4, ta-2, ta-4, tb-3, tb-5,
+ta-3, ta-1, tb-4, tb-1, ta-4, tb-2, tb-5, ta-2, ta-5,
+tb-3, ta-1, ta-3, tb-1, tb-4, tb-2, ta-4, ta-2, tb-5, tb-3, ta-5, ta-3, tb-6,
 tb-4, ta-4, tb-5, ta-5, tb-6, ta-6,
 ```
 结果说明：如果将源码中的list改成ArrayList对象时，程序会产生ConcurrentModificationException异常。

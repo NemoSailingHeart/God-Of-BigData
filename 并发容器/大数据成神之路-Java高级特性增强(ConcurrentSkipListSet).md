@@ -18,7 +18,7 @@ ConcurrentSkipListSet的数据结构，如下图所示：![ceaa5eae278d00721ece5
 (02) ConcurrentSkipListSet实现了NavigableSet接口。因此，ConcurrentSkipListSet是一个有序的集合。
 (03) ConcurrentSkipListSet是通过ConcurrentSkipListMap实现的。它包含一个ConcurrentNavigableMap对象m，而m对象实际上是ConcurrentNavigableMap的实现类ConcurrentSkipListMap的实例。ConcurrentSkipListMap中的元素是key-value键值对；而ConcurrentSkipListSet是集合，它只用到了ConcurrentSkipListMap中的key！
 #### ConcurrentSkipListSet函数列表
-```
+```java
 // 构造一个新的空 set，该 set 按照元素的自然顺序对其进行排序。
 ConcurrentSkipListSet()
 // 构造一个包含指定 collection 中元素的新 set，这个新 set 按照元素的自然顺序对其进行排序。
@@ -85,7 +85,7 @@ NavigableSet<E> tailSet(E fromElement, boolean inclusive)
 ```
 #### ConcurrentSkipListSet示例
 ConcurrentSkipListSet是通过ConcurrentSkipListMap实现的，它的接口基本上都是通过调用ConcurrentSkipListMap接口来实现的
-```
+```java
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -104,7 +104,7 @@ public class ConcurrentSkipListSetDemo1 {
     //private static Set<String> set = new TreeSet<String>();
     private static Set<String> set = new ConcurrentSkipListSet<String>();
     public static void main(String[] args) {
-    
+
         // 同时启动两个线程对set进行操作！
         new MyThread("a").start();
         new MyThread("b").start();
@@ -140,25 +140,25 @@ public class ConcurrentSkipListSetDemo1 {
 ```
 其中一次运行结果：
 ```
-a1, b1, 
-a1, a1, a2, b1, 
+a1, b1,
+a1, a1, a2, b1,
 b1, a1, a2, a3, b1,
 
-a1, a2, a3, a1, a4, b1, b2, 
-a2, a1, a2, a3, a4, a5, b1, b2, 
-a3, a0, a4, a5, a1, b1, a2, b2, 
-a3, a0, a4, a1, a5, a2, b1, a3, b2, a4, b3, 
-a5, a0, b1, a1, b2, a2, b3, 
-a3, a0, a4, a1, a5, a2, b1, a3, b2, a4, b3, a5, b4, 
-b1, a0, b2, a1, b3, a2, b4, 
-a3, a0, a4, a1, a5, a2, b1, a3, b2, a4, b3, a5, b4, b1, b5, 
-b2, a0, a1, a2, a3, a4, a5, b3, b1, b4, b2, b5, 
-b3, a0, b4, a1, b5, 
-a2, a0, a3, a1, a4, a2, a5, a3, b0, a4, b1, a5, b2, b0, b3, b1, b4, b2, b5, b3, 
-b4, a0, b5, 
-a1, a2, a3, a4, a5, b0, b1, b2, b3, b4, b5, 
-a0, a1, a2, a3, a4, a5, b0, b1, b2, b3, b4, b5, 
-a0, a1, a2, a3, a4, a5, b0, b1, b2, b3, b4, b5, 
+a1, a2, a3, a1, a4, b1, b2,
+a2, a1, a2, a3, a4, a5, b1, b2,
+a3, a0, a4, a5, a1, b1, a2, b2,
+a3, a0, a4, a1, a5, a2, b1, a3, b2, a4, b3,
+a5, a0, b1, a1, b2, a2, b3,
+a3, a0, a4, a1, a5, a2, b1, a3, b2, a4, b3, a5, b4,
+b1, a0, b2, a1, b3, a2, b4,
+a3, a0, a4, a1, a5, a2, b1, a3, b2, a4, b3, a5, b4, b1, b5,
+b2, a0, a1, a2, a3, a4, a5, b3, b1, b4, b2, b5,
+b3, a0, b4, a1, b5,
+a2, a0, a3, a1, a4, a2, a5, a3, b0, a4, b1, a5, b2, b0, b3, b1, b4, b2, b5, b3,
+b4, a0, b5,
+a1, a2, a3, a4, a5, b0, b1, b2, b3, b4, b5,
+a0, a1, a2, a3, a4, a5, b0, b1, b2, b3, b4, b5,
+a0, a1, a2, a3, a4, a5, b0, b1, b2, b3, b4, b5,
 a0, a1, a2, a3, a4, a5, b0, b1, b2, b3, b4, b5,
 ```
 结果说明：

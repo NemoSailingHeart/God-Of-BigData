@@ -27,13 +27,13 @@
 #### CopyOnWriteArraySet原理和数据结构
 
 CopyOnWriteArraySet的数据结构，如下图所示：![126a88369f7024046d46da2fb20bba03](大数据成神之路-Java高级特性增强(CopyOnWriteArraySet).resources/F023A78F-7010-495C-B34F-FBCDE1801AF8.jpg)
-说明：  
-1. CopyOnWriteArraySet继承于AbstractSet，这就意味着它是一个集合。  
+说明： 
+1. CopyOnWriteArraySet继承于AbstractSet，这就意味着它是一个集合。 
 2. CopyOnWriteArraySet包含CopyOnWriteArrayList对象，它是通过CopyOnWriteArrayList实现的。而CopyOnWriteArrayList本质是个动态数组队列，所以CopyOnWriteArraySet相当于通过通过动态数组实现的“集合”！ CopyOnWriteArrayList中允许有重复的元素；但是,CopyOnWriteArraySet是一个集合,所以它不能有重复集合。因此,CopyOnWriteArrayList额外提供了addIfAbsent()和addAllAbsent()这两个添加元素的API,通过这些API来添加元素时，只有当元素不存在时才执行添加操作！   
 至于CopyOnWriteArraySet的"线程安全"机制,和CopyOnWriteArrayList一样,是通过volatile和互斥锁来实现的。这个在前一章节介绍CopyOnWriteArrayList时数据结构时,已经进行了说明，这里就不再重复叙述了。
 
 #### CopyOnWriteArraySet函数列表
-```
+```java
 // 创建一个空 set。
 CopyOnWriteArraySet()
 // 创建一个包含指定 collection 所有元素的 set。
@@ -71,7 +71,7 @@ Object[] toArray()
 #### CopyOnWriteArraySet示例
 CopyOnWriteArraySet是通过CopyOnWriteArrayList实现的，它的API基本上都是通过调用CopyOnWriteArrayList的API来实现的。相信对CopyOnWriteArrayList了解的话，对CopyOnWriteArraySet的了解是水到渠成的事。
 下面，我们通过一个例子去对比HashSet和CopyOnWriteArraySet。
-```
+```java
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -89,7 +89,7 @@ public class CopyOnWriteArraySetTest1 {
     //private static Set<String> set = new HashSet<String>();
     private static Set<String> set = new CopyOnWriteArraySet<String>();
     public static void main(String[] args) {
-    
+
         // 同时启动两个线程对set进行操作！
         new MyThread("ta").start();
         new MyThread("tb").start();
@@ -125,25 +125,25 @@ public class CopyOnWriteArraySetTest1 {
 ```
 其中一次运行结果：
 ```
-ta-1, tb-1, ta-1, 
-tb-1, ta-1, 
-tb-1, ta-1, ta-2, 
-tb-1, ta-1, ta-2, tb-1, tb-2, 
-ta-2, ta-1, tb-2, tb-1, ta-3, 
-ta-2, ta-1, tb-2, tb-1, ta-3, ta-2, tb-3, 
-tb-2, ta-1, ta-3, tb-1, tb-3, ta-2, ta-4, 
-tb-2, ta-1, ta-3, tb-1, tb-3, ta-2, ta-4, tb-2, tb-4, 
-ta-3, ta-1, tb-3, tb-1, ta-4, ta-2, tb-4, tb-2, ta-5, 
-ta-3, ta-1, tb-3, tb-1, ta-4, ta-2, tb-4, tb-2, ta-5, ta-3, tb-5, 
-tb-3, ta-1, ta-4, tb-1, tb-4, ta-2, ta-5, tb-2, tb-5, ta-3, ta-0, 
-tb-3, ta-1, ta-4, tb-1, tb-4, ta-2, ta-5, tb-2, tb-5, ta-3, ta-0, tb-3, tb-0, 
-ta-4, ta-1, tb-4, tb-1, ta-5, ta-2, tb-5, tb-2, ta-0, ta-3, tb-0, 
-tb-3, ta-1, ta-4, tb-1, tb-4, ta-2, ta-5, tb-5, ta-0, tb-0, 
-ta-1, tb-2, tb-1, ta-3, ta-2, tb-3, tb-2, ta-4, ta-3, tb-4, tb-3, ta-5, ta-4, tb-5, tb-4, ta-0, ta-5, tb-0, 
-tb-5, ta-1, ta-0, tb-1, tb-0, 
-ta-2, ta-1, tb-2, tb-1, ta-3, ta-2, tb-3, tb-2, ta-4, ta-3, tb-4, tb-3, ta-5, tb-5, ta-0, tb-0, 
-ta-4, ta-1, tb-4, tb-1, ta-5, ta-2, tb-5, tb-2, ta-0, ta-3, tb-0, 
-tb-3, ta-1, ta-4, tb-1, tb-4, ta-2, ta-5, tb-2, tb-5, ta-3, ta-0, tb-3, tb-0, 
+ta-1, tb-1, ta-1,
+tb-1, ta-1,
+tb-1, ta-1, ta-2,
+tb-1, ta-1, ta-2, tb-1, tb-2,
+ta-2, ta-1, tb-2, tb-1, ta-3,
+ta-2, ta-1, tb-2, tb-1, ta-3, ta-2, tb-3,
+tb-2, ta-1, ta-3, tb-1, tb-3, ta-2, ta-4,
+tb-2, ta-1, ta-3, tb-1, tb-3, ta-2, ta-4, tb-2, tb-4,
+ta-3, ta-1, tb-3, tb-1, ta-4, ta-2, tb-4, tb-2, ta-5,
+ta-3, ta-1, tb-3, tb-1, ta-4, ta-2, tb-4, tb-2, ta-5, ta-3, tb-5,
+tb-3, ta-1, ta-4, tb-1, tb-4, ta-2, ta-5, tb-2, tb-5, ta-3, ta-0,
+tb-3, ta-1, ta-4, tb-1, tb-4, ta-2, ta-5, tb-2, tb-5, ta-3, ta-0, tb-3, tb-0,
+ta-4, ta-1, tb-4, tb-1, ta-5, ta-2, tb-5, tb-2, ta-0, ta-3, tb-0,
+tb-3, ta-1, ta-4, tb-1, tb-4, ta-2, ta-5, tb-5, ta-0, tb-0,
+ta-1, tb-2, tb-1, ta-3, ta-2, tb-3, tb-2, ta-4, ta-3, tb-4, tb-3, ta-5, ta-4, tb-5, tb-4, ta-0, ta-5, tb-0,
+tb-5, ta-1, ta-0, tb-1, tb-0,
+ta-2, ta-1, tb-2, tb-1, ta-3, ta-2, tb-3, tb-2, ta-4, ta-3, tb-4, tb-3, ta-5, tb-5, ta-0, tb-0,
+ta-4, ta-1, tb-4, tb-1, ta-5, ta-2, tb-5, tb-2, ta-0, ta-3, tb-0,
+tb-3, ta-1, ta-4, tb-1, tb-4, ta-2, ta-5, tb-2, tb-5, ta-3, ta-0, tb-3, tb-0,
 ta-4, tb-4, ta-5, tb-5, ta-0, tb-0,
 ```
 结果说明：

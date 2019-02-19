@@ -24,7 +24,7 @@ LinkedBlockingDeque的数据结构，如下图所示：
 3.5 lock是控制对LinkedBlockingDeque的互斥锁，当多个线程竞争同时访问LinkedBlockingDeque时，某线程获取到了互斥锁lock，其它线程则需要阻塞等待，直到该线程释放lock，其它线程才有机会获取lock从而获取cpu执行权。
 3.6 notEmpty和notFull分别是“非空条件”和“未满条件”。通过它们能够更加细腻进行并发控制。
 ### LinkedBlockingDeque函数列表
-```
+```java
 // 创建一个容量为 Integer.MAX_VALUE 的 LinkedBlockingDeque。
 LinkedBlockingDeque()
 // 创建一个容量为 Integer.MAX_VALUE 的 LinkedBlockingDeque，最初包含给定 collection 的元素，以该 collection 迭代器的遍历顺序添加。
@@ -131,7 +131,7 @@ String toString()
 **1. 创建**
 
 下面以LinkedBlockingDeque(int capacity)来进行说明。
-```
+```java
 public LinkedBlockingDeque(int capacity) {
     if (capacity <= 0) throw new IllegalArgumentException();
     this.capacity = capacity;
@@ -140,7 +140,7 @@ public LinkedBlockingDeque(int capacity) {
 说明：capacity是“链式阻塞队列”的容量。
 
 LinkedBlockingDeque中相关的数据结果定义如下：
-```
+```java
 // “双向队列”的表头
 transient Node<E> first;
 // “双向队列”的表尾
@@ -157,7 +157,7 @@ private final Condition notFull = lock.newCondition();
 说明：lock是互斥锁，用于控制多线程对LinkedBlockingDeque中元素的互斥访问；而notEmpty和notFull是与lock绑定的条件，它们用于实现对多线程更精确的控制。
 
 双向链表的节点Node的定义如下：
-```
+```java
 static final class Node<E> {
     E item;       // 数据
     Node<E> prev; // 前一节点
@@ -169,14 +169,14 @@ static final class Node<E> {
 2. 添加
 
 下面以offer(E e)为例，对LinkedBlockingDeque的添加方法进行说明。
-```
+```java
 public boolean offer(E e) {
     return offerLast(e);
 }
 ```
 offer()实际上是调用offerLast()将元素添加到队列的末尾。
 offerLast()的源码如下：
-```
+```java
 public boolean offerLast(E e) {
     if (e == null) throw new NullPointerException();
     // 新建节点
@@ -196,7 +196,7 @@ public boolean offerLast(E e) {
 说明：offerLast()的作用，是新建节点并将该节点插入到双向链表的末尾。它在插入节点前，会获取锁；操作完毕，再释放锁。
 
 linkLast()的源码如下：
-```
+```java
 private boolean linkLast(Node<E> node) {
     // 如果“双向链表的节点数量” > “容量”，则返回false，表示插入失败。
     if (count >= capacity)
@@ -221,7 +221,7 @@ private boolean linkLast(Node<E> node) {
 **3. 删除**
 
 下面以take()为例，对LinkedBlockingDeque的取出方法进行说明。
-```
+```java
 public E take() throws InterruptedException {
     return takeFirst();
 }
@@ -248,7 +248,7 @@ public E takeFirst() throws InterruptedException {
 说明：takeFirst()的作用，是删除双向链表的第一个节点，并返回节点对应的值。它在插入节点前，会获取锁；操作完毕，再释放锁。
 
 unlinkFirst()的源码如下：
-```
+```java
 private E unlinkFirst() {
     // assert lock.isHeldByCurrentThread();
     Node<E> f = first;
@@ -276,14 +276,14 @@ private E unlinkFirst() {
 4. 遍历
 下面对LinkedBlockingDeque的遍历方法进行说明。
 
-```
+```java
 public Iterator<E> iterator() {
     return new Itr();
 }
 ```
 iterator()实际上是返回一个Iter对象。
 Itr类的定义如下：
-```
+```java
 private class Itr extends AbstractItr {
     // “双向队列”的表头
     Node<E> firstNode() { return first; }
@@ -292,7 +292,7 @@ private class Itr extends AbstractItr {
 }
 ```
 Itr继承于AbstractItr，而AbstractItr的定义如下：
-```
+```java
 private abstract class AbstractItr implements Iterator<E> {
     // next是下一次调用next()会返回的节点。
     Node<E> next;
@@ -384,7 +384,7 @@ private abstract class AbstractItr implements Iterator<E> {
 ```
 ### LinkedBlockingDeque示例
 
-```
+```java
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -402,7 +402,7 @@ public class LinkedBlockingDequeDemo1 {
     //private static Queue<String> queue = new LinkedList<String>();
     private static Queue<String> queue = new LinkedBlockingDeque<String>();
     public static void main(String[] args) {
-    
+
         // 同时启动两个线程对queue进行操作！
         new MyThread("ta").start();
         new MyThread("tb").start();
@@ -440,15 +440,15 @@ public class LinkedBlockingDequeDemo1 {
 ```
 ta1, ta1, tb1, tb1,
 
-ta1, ta1, tb1, tb1, tb2, tb2, ta2, 
-ta2, 
-ta1, ta1, tb1, tb1, tb2, tb2, ta2, ta2, tb3, tb3, ta3, 
-ta3, ta1, 
-tb1, ta1, tb2, tb1, ta2, tb2, tb3, ta2, ta3, tb3, tb4, ta3, ta4, 
-tb4, ta1, ta4, tb1, tb5, 
-tb2, ta1, ta2, tb1, tb3, tb2, ta3, ta2, tb4, tb3, ta4, ta3, tb5, tb4, ta5, 
-ta4, ta1, tb5, tb1, ta5, tb2, tb6, 
-ta2, ta1, tb3, tb1, ta3, tb2, tb4, ta2, ta4, tb3, tb5, ta3, ta5, tb4, tb6, ta4, ta6, 
+ta1, ta1, tb1, tb1, tb2, tb2, ta2,
+ta2,
+ta1, ta1, tb1, tb1, tb2, tb2, ta2, ta2, tb3, tb3, ta3,
+ta3, ta1,
+tb1, ta1, tb2, tb1, ta2, tb2, tb3, ta2, ta3, tb3, tb4, ta3, ta4,
+tb4, ta1, ta4, tb1, tb5,
+tb2, ta1, ta2, tb1, tb3, tb2, ta3, ta2, tb4, tb3, ta4, ta3, tb5, tb4, ta5,
+ta4, ta1, tb5, tb1, ta5, tb2, tb6,
+ta2, ta1, tb3, tb1, ta3, tb2, tb4, ta2, ta4, tb3, tb5, ta3, ta5, tb4, tb6, ta4, ta6,
 tb5, ta5, tb6, ta6,
 ```
 结果说明：示例程序中，启动两个线程(线程ta和线程tb)分别对LinkedBlockingDeque进行操作。以线程ta而言，它会先获取“线程名”+“序号”，然后将该字符串添加到LinkedBlockingDeque中；接着，遍历并输出LinkedBlockingDeque中的全部元素。 线程tb的操作和线程ta一样，只不过线程tb的名字和线程ta的名字不同。

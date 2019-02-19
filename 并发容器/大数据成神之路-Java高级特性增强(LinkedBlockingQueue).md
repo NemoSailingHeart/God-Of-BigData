@@ -28,7 +28,7 @@ LinkedBlockingQueue在实现“多线程对竞争资源的互斥访问”时，�
 ```
 ### LinkedBlockingQueue函数列表
 
-```
+```java
 // 创建一个容量为 Integer.MAX_VALUE 的 LinkedBlockingQueue。
 LinkedBlockingQueue()
 // 创建一个容量是 Integer.MAX_VALUE 的 LinkedBlockingQueue，最初包含给定 collection 的元素，元素按该 collection 迭代器的遍历顺序添加。
@@ -76,7 +76,7 @@ String toString()
 下面从LinkedBlockingQueue的创建，添加，删除，遍历这几个方面对它进行分析。
 **1. 创建**
 下面以LinkedBlockingQueue(int capacity)来进行说明。
-```
+```java
 public LinkedBlockingQueue(int capacity) {
     if (capacity <= 0) throw new IllegalArgumentException();
     this.capacity = capacity;
@@ -86,7 +86,7 @@ public LinkedBlockingQueue(int capacity) {
 说明：
 (01) capacity是“链式阻塞队列”的容量。
 (02) head和last是“链式阻塞队列”的首节点和尾节点。它们在LinkedBlockingQueue中的声明如下：
-```
+```java
 // 容量
 private final int capacity;
 // 当前数量
@@ -101,7 +101,7 @@ private final ReentrantLock putLock = new ReentrantLock();
 private final Condition notFull = putLock.newCondition();
 ```
 链表的节点定义如下：
-```
+```java
 static class Node<E> {
     E item;         // 数据
     Node<E> next;   // 下一个节点的指针
@@ -112,7 +112,7 @@ static class Node<E> {
 **2. 添加**
 
 下面以offer(E e)为例，对LinkedBlockingQueue的添加方法进行说明。
-```
+```java
 public boolean offer(E e) {
     if (e == null) throw new NullPointerException();
     // 如果“队列已满”，则返回false，表示插入失败。
@@ -149,7 +149,7 @@ public boolean offer(E e) {
 ```
 说明：offer()的作用很简单，就是将元素E添加到队列的末尾。
 enqueue()的源码如下：
-```
+```java
 private void enqueue(Node<E> node) {
     // assert putLock.isHeldByCurrentThread();
     // assert last.next == null;
@@ -173,7 +173,7 @@ signalNotEmpty()的作用是唤醒notEmpty上的等待线程。
 **3. 取出**
 
 下面以take()为例，对LinkedBlockingQueue的取出方法进行说明。
-```
+```java
 public E take() throws InterruptedException {
     E x;
     int c = -1;
@@ -204,7 +204,7 @@ public E take() throws InterruptedException {
 ```
 说明：take()的作用是取出并返回队列的头。若队列为空，则一直等待。
 dequeue()的源码如下：
-```
+```java
 private E dequeue() {
     // assert takeLock.isHeldByCurrentThread();
     // assert head.item == null;
@@ -219,7 +219,7 @@ private E dequeue() {
 ```
 dequeue()的作用就是删除队列的头节点，并将表头指向“原头节点的下一个节点”。
 signalNotFull()的源码如下：
-```
+```java
 private void signalNotFull() {
     final ReentrantLock putLock = this.putLock;
     putLock.lock();
@@ -234,14 +234,14 @@ signalNotFull()的作用就是唤醒notFull上的等待线程。
 
 **4. 遍历**
 下面对LinkedBlockingQueue的遍历方法进行说明。
-```
+```java
 public Iterator<E> iterator() {
   return new Itr();
 }
 ```
 iterator()实际上是返回一个Iter对象。
 Itr类的定义如下：
-```
+```java
 private class Itr implements Iterator<E> {
     // 当前节点
     private Node<E> current;
@@ -319,7 +319,7 @@ private class Itr implements Iterator<E> {
 }
 ```
 ### LinkedBlockingQueue示例
-```
+```java
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -337,7 +337,7 @@ public class LinkedBlockingQueueDemo1 {
     //private static Queue<String> queue = new LinkedList<String>();
     private static Queue<String> queue = new LinkedBlockingQueue<String>();
     public static void main(String[] args) {
-    
+
         // 同时启动两个线程对queue进行操作！
         new MyThread("ta").start();
         new MyThread("tb").start();
@@ -373,17 +373,17 @@ public class LinkedBlockingQueueDemo1 {
 ```
 其中一次运行结果：
 ```
-tb1, ta1, 
-tb1, ta1, ta2, 
-tb1, ta1, ta2, ta3, 
-tb1, ta1, ta2, ta3, ta4, 
-tb1, ta1, tb1, ta2, ta1, ta3, ta2, ta4, ta3, ta5, 
-ta4, tb1, ta5, ta1, ta6, 
-ta2, tb1, ta3, ta1, ta4, ta2, ta5, ta3, ta6, ta4, tb2, 
-ta5, ta6, tb2, 
-tb1, ta1, ta2, ta3, ta4, ta5, ta6, tb2, tb3, 
-tb1, ta1, ta2, ta3, ta4, ta5, ta6, tb2, tb3, tb4, 
-tb1, ta1, ta2, ta3, ta4, ta5, ta6, tb2, tb3, tb4, tb5, 
+tb1, ta1,
+tb1, ta1, ta2,
+tb1, ta1, ta2, ta3,
+tb1, ta1, ta2, ta3, ta4,
+tb1, ta1, tb1, ta2, ta1, ta3, ta2, ta4, ta3, ta5,
+ta4, tb1, ta5, ta1, ta6,
+ta2, tb1, ta3, ta1, ta4, ta2, ta5, ta3, ta6, ta4, tb2,
+ta5, ta6, tb2,
+tb1, ta1, ta2, ta3, ta4, ta5, ta6, tb2, tb3,
+tb1, ta1, ta2, ta3, ta4, ta5, ta6, tb2, tb3, tb4,
+tb1, ta1, ta2, ta3, ta4, ta5, ta6, tb2, tb3, tb4, tb5,
 tb1, ta1, ta2, ta3, ta4, ta5, ta6, tb2, tb3, tb4, tb5, tb6,
 ```
 结果说明：
