@@ -9,7 +9,7 @@
 ## 创建组
 
 我们使用zookeeper的Java API来创建一个/zoo的组节点：
-```
+```java
 public class CreateGroup implements Watcher {
  private static final int SESSION_TIMEOUT = 5000;
  private ZooKeeper zk;
@@ -45,11 +45,11 @@ public class CreateGroup implements Watcher {
      createGroup.close();
      }
  }
- ```
+```
 当main()执行时，首先创建了一个CreateGroup的对象，然后调用connect()方法，通过zookeeper的API与zookeeper服务器连接。创建连接我们需要3个参数：一是服务器端主机名称以及端口号，二是客户端连接服务器session的超时时间，三是Watcher接口的一个实例。Watcher实例负责接收Zookeeper数据变化时产生的事件回调。
 
 在连接函数中创建了zookeeper的实例，然后建立与服务器的连接。建立连接函数会立即返回，所以我们需要等待连接建立成功后再进行其他的操作。我们使用CountDownLatch来阻塞当前线程，直到zookeeper准备就绪。这时，我们就看到Watcher的作用了。我们实现了Watcher接口的一个方法：
-```
+```java
 public void process(WatchedEvent event);
 ```
 当客户端连接上了zookeeper服务器，Watcher将由process()函数接收一个连接成功的事件。我们接下来调用CountDownLatch，释放之前的阻塞。
@@ -59,7 +59,7 @@ public void process(WatchedEvent event);
 znode的性质分为ephemeral和persistent两种。ephemeral性质的znode在创建他的客户端的会话结束，或者客户端以其他原因断开与服务器的连接时，会被自动删除。而persistent性质的znode就不会被自动删除，除非客户端主动删除，而且不一定是创建它的客户端可以删除它，其他客户端也可以删除它。这里我们创建一个persistent的znode。
 create()将返回znode的path。我们讲新建znode的path打印出来。
 我们执行如上程序：
-```
+```shell
 % export CLASSPATH=ch21-zk/target/classes/:$ZOOKEEPER_HOME/*:\
 $ZOOKEEPER_HOME/lib/*:$ZOOKEEPER_HOME/conf
 % java CreateGroup localhost zoo
@@ -70,7 +70,7 @@ Created /zoo
 接下来我们实现如何在一个组中注册成员。我们将使用ephemeral znode来创建这些成员节点。那么当客户端程序退出时，这些成员将被删除。
 我们创建一个ConnetionWatcher类，然后继承实现一个JoinGroup类：
 
-```
+```java
 public class ConnectionWatcher implements Watcher {
 
  private static final int SESSION_TIMEOUT = 5000;
@@ -121,7 +121,7 @@ public class JoinGroup extends ConnectionWatcher {
 
 下面我们实现一个程序来列出一个组中的所有成员。
 
-```
+```java
 public class ListGroup extends ConnectionWatcher {
 
  public void list(String groupName) throws KeeperException,
@@ -153,12 +153,12 @@ public class ListGroup extends ConnectionWatcher {
 ```
 
 我们在list()方法中通过调用getChildren()方法来获得某一个path下的子节点，然后打印出来。我们这里会试着捕获KeeperException.NoNodeException，当znode不存在时会抛出这个异常。我们运行程序，会看见如下结果，说明我们还没在zoo组中添加任何成员几点：
-```
+```shell
 % java ListGroup localhost zoo
 No members in group zoo
 ```
 我们可以运行之前的JoinGroup来添加成员。在后台运行一些JoinGroup程序，这些程序添加节点后都处于sleep状态：
-```
+```shell
 % java JoinGroup localhost zoo duck &
 % java JoinGroup localhost zoo cow &
 % java JoinGroup localhost zoo goat &
@@ -166,7 +166,7 @@ No members in group zoo
 ```
 最后一行命令的作用是将最后一个启动的java程序的pid记录下来，我们好在列出zoo下面的成员后，将该进程kill掉。
 下面我们将zoo下的成员打印出来：
-```
+```shell
 % java ListGroup localhost zoo
 goat
 duck
@@ -187,7 +187,7 @@ cow
 
 Zookeeper有一套命令行工具。我们可以像如下使用，来查找zoo下的成员节点：
 
-```
+```shell
 % zkCli.sh -server localhost ls /zoo
 [cow, duck]
 ```
@@ -201,7 +201,7 @@ ZooKeeper的API提供一个delete()方法来删除一个znode。我们通过输�
 删除一个znode之前，我们需要先删除它的子节点，就下如下代码中实现的那样：
 
 
-```
+```java
 public class DeleteGroup extends ConnectionWatcher {
 
  public void delete(String groupName) throws KeeperException,
@@ -231,7 +231,7 @@ public class DeleteGroup extends ConnectionWatcher {
 
 最后我们执行如下操作来删除zoo group：
 
-```
+```shell
 % java DeleteGroup localhost zoo
 % java ListGroup localhost zoo
 Group zoo does not exist

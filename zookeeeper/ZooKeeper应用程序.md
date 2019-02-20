@@ -9,7 +9,7 @@
 
 我们在一个叫做ActiveKeyValueStore的类中编写代码如下：
 
-```
+```java
 public class ActiveKeyValueStore extends ConnectionWatcher {
 
   private static final Charset CHARSET = Charset.forName("UTF-8");
@@ -30,7 +30,7 @@ write()方法主要实现将给定的key-value对写入到ZooKeeper中。这其�
 
 我们为了说明ActiveKeyValueStore怎么使用，我们考虑实现一个ConfigUpdater类来实现更新配置。下面代码实现了一个在一些随机时刻更新配置数据的应用。
 
-```
+```java
 public class ConfigUpdater {
 
   public static final String PATH = "/config";
@@ -62,7 +62,7 @@ public class ConfigUpdater {
 
 下面我们来看一下，如何读取/config上的值。首先，我们在ActiveKeyValueStore中实现一个读方法。
 
-```
+```java
 public String read(String path, Watcher watcher) throws InterruptedException,
       KeeperException {
     byte[] data = zk.getData(path, watcher, null/*stat*/);
@@ -75,7 +75,7 @@ ZooKeeper的getData()方法的参数包含：path，一个Watcher对象和一个
 
 下面的代码实现了一个以观察模式获得ZooKeeper中的数据更新的应用，并将值到后台中。
 
-```
+```java
 public class ConfigWatcher implements Watcher {
 
   private ActiveKeyValueStore store;
@@ -120,7 +120,7 @@ public class ConfigWatcher implements Watcher {
 
 让我们来看一下控制台打印的ConfigUpdater运行结果：
 
-```
+```shell
 % java ConfigUpdater localhost
 Set /config to 79
 Set /config to 14
@@ -129,7 +129,7 @@ Set /config to 78
 
 然后立即在另外的控制台终端窗口中运行ConfigWatcher:
 
-```
+```shell
 % java ConfigWatcher localhost
 Read /config as 79
 Read /config as 14
@@ -182,7 +182,7 @@ KeeperException包含了3大类异常。
 
 回过头来看一下ActiveKeyValueStore中的write()方法，其中调用了exists()方法来判断znode是否存在，然后决定是创建一个znode还是调用setData来更新数据。
 
-```
+```java
 public void write(String path, String value) throws InterruptedException,
       KeeperException {
     Stat stat = zk.exists(path, false);
@@ -193,12 +193,10 @@ public void write(String path, String value) throws InterruptedException,
       zk.setData(path, value.getBytes(CHARSET), -1);
     }
   }
-  ```
-  
-  
+```
 从整体上来看，write()方法是一个幂等方法，所以我们可以不断的尝试执行它。我们来修改一个新版本的write()方法，实现在循环中不断的尝试write操作。我们为尝试操作设置了一个最大尝试次数参数（MAX_RETRIES）和每次尝试间隔的休眠(RETRY_PERIOD_SECONDS)时长：
 
-```
+```java
 public void write(String path, String value) throws InterruptedException,
       KeeperException {
     int retries = 0;
@@ -223,12 +221,12 @@ public void write(String path, String value) throws InterruptedException,
       }
     }
   }
-  ```
+```
   
   
 细心的读者可能会发现我们并没有在捕获KeeperException.SessionExpiredException时继续重新尝试操作，这是因为当session过期后，ZooKeeper会变为CLOSED状态，就不能再重新连接了。我们只是简单的抛出一个异常，通知调用者去创建一个新的ZooKeeper实例，所以write()方法可以不断的尝试执行。一个简单的方式来创建一个ZooKeeper实例就是重新new一个ConfigUpdater实例。
 
-```
+```java
 public static void main(String[] args) throws Exception {
     while (true) {
       try {
@@ -244,7 +242,7 @@ public static void main(String[] args) throws Exception {
       }
     }
   }
-  ```
+```
   
   
 另一个可以替代处理session过期的方法就是使用watcher来监控Expired的KeeperState，然后重新建立一个连接。这种方法下，我们只需要不断的尝试执行write()，如果我们得到了KeeperException.SessionExpiredException异常，连接最终也会被重新建立起来。那么我们抛开如何从一个过期的session中恢复问题，我们的重点是连接丢失的问题也可以这样解决，只是处理方法不同而已。

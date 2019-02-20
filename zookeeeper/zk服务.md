@@ -68,19 +68,19 @@ Multiupdate对于绑定一些结构化的全局变量很有用处。例如绑定
 ### APIs
 ZooKeeper客户端使用的核心编程语言有JAVA和C；同时也支持Perl、Python和REST。执行操作的方式呢，分为同步执行和异步执行。我们之前已经见识过了同步的Java API中的exists。
 
-```
+```java
 public Stat exists(String path, Watcher watcher) throws KeeperException,
  InterruptedException
- ```
+```
  
 下面代码则是异步方式的exists:
 
-```
+```java
 public void exists(String path, Watcher watcher, StatCallback cb, Object ctx)
 ```
 Java API中，异步的方法的返回类型都是void，而操作的返回的结果将传递到回调对象的回调函数中。回调对象将实现StatCallback接口中的一个回调函数，来接收操作返回的结果。函数接口如下：
 
-```
+```java
 public void processResult(int rc, String path, Object ctx, Stat stat);
 ```
 
@@ -112,13 +112,13 @@ ZooKeeper通过鉴权来获得客户端的身份，然后通过ACL来控制客�
 
 客户端可以在与ZooKeeper建立会话连接后，自己给自己授权。授权是并不是必须的，虽然znode的ACL要求客户端必须是身份合法的，在这种情况下，客户端可以自己授权来访问znode。下面的例子，客户端使用用户名和密码为自己授权：
 
-```
+```java
  zk.addAuthInfo("digest", "tom:secret".getBytes());
- ```
+```
  
 ACL是由鉴权方式、鉴权方式的ID和一个许可（permession）的集合组成。例如，我们想通过一个ip地址为10.0.0.1的客户端访问一个znode。那么，我们需要为znode设置一个ACL，鉴权方式使用IP鉴权方式，鉴权方式的ID为10.0.0.1，只允许读权限。使用JAVA我们将像如下方式创建一个ACL对象：
 
-```
+```java
 new ACL(Perms.READ,new Id("ip", "10.0.0.1"));
 ```
 
@@ -200,7 +200,7 @@ ZooKeeper的客户端中，配置了一个ensemble服务器列表。当启动时
 
 ZooKeeper对象在他的生命周期内会有不同的状态，我们通过getState()来获得当前的状态。
 
-```
+```java
 public States getState()
 ```
 
