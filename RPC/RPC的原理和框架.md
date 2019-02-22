@@ -186,7 +186,7 @@ binary: 如 thrift; hession; kryo 等
 (1).服务端
 
 　　服务端提供客户端所期待的服务，一般包括三个部分：服务接口，服务实现以及服务的注册暴露三部分，如下：服务接口
-  ```
+```java
   public interface HelloService {
     String hello(String name);
     String hi(String msg);
@@ -195,7 +195,7 @@ binary: 如 thrift; hession; kryo 等
 
 服务实现
 
-```
+```java
 public class HelloServiceImpl implements HelloService{
     @Override
     public String hello(String name) {
@@ -212,7 +212,7 @@ public class HelloServiceImpl implements HelloService{
 
 服务暴露：只有把服务暴露出来，才能让客户端进行调用，这是RPC框架功能之一。
 
-```
+```java
 public class RpcProvider {
     public static void main(String[] args) throws Exception {
         HelloService service = new HelloServiceImpl();
@@ -220,13 +220,12 @@ public class RpcProvider {
         RpcFramework.export(service, 1234);
     }
 }
-
 ```
 
 (2).客户端
 
 　　客户端消费服务端所提供的服务，一般包括两个部分：服务接口和服务引用两个部分，如下：服务接口：与服务端共享同一个服务接口
-  ```
+```java
   public interface HelloService {
     String hello(String name);
     String hi(String msg);
@@ -235,8 +234,7 @@ public class RpcProvider {
 
 服务引用：消费端通过RPC框架进行远程调用，这也是RPC框架功能之一
 
-```
-
+```java
 public class RpcConsumer {
     public static void main(String[] args) throws Exception {
         // 由RpcFramework生成的HelloService的代理
@@ -245,14 +243,13 @@ public class RpcConsumer {
         System.out.println("客户端收到远程调用的结果 ： " + hello);
     }
 }
-
 ```
 
 (3).RPC框架原型实现
 
 　　RPC框架主要包括两大功能：一个用于服务端暴露服务，一个用于客户端引用服务。服务端暴露服务
 
-```
+```java
     /**
      * 暴露服务
      *
@@ -329,11 +326,10 @@ public class RpcConsumer {
             }
         }
     }
-
 ```
 从该RPC框架的简易实现来看，RPC服务端逻辑是：首先创建ServerSocket负责监听特定端口并接收客户连接请求，然后使用Java原生的序列化/反序列化机制来解析得到请求，包括所调用方法的名称、参数列表和实参，最后反射调用服务端对服务接口的具体实现并将得到的结果回传至客户端。至此，一次简单PRC调用的服务端流程执行完毕。客户端引用服务
 
-```
+```java
     /**
      * 引用服务
      *
@@ -419,7 +415,7 @@ public class RpcConsumer {
 
 从该RPC框架的简易实现来看，RPC客户端逻辑是：首先创建Socket客户端并与服务端建立链接，然后使用Java原生的序列化/反序列化机制将调用请求发送给客户端，包括所调用方法的名称、参数列表将服务端的响应返回给用户即可。至此，一次简单PRC调用的客户端流程执行完毕。特别地，从代码实现来看，实现透明的PRC调用的关键就是 动态代理，这是RPC框架实现的灵魂所在。RPC原型实现
 
-```
+```java
 public class RpcFramework {
     /**
      * 暴露服务
@@ -580,7 +576,6 @@ public class RpcFramework {
         return proxy;
     }
 }
-
 ```
 以上是简易RPC框架实现的简易完整代码。
 

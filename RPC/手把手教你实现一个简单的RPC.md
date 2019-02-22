@@ -34,7 +34,7 @@
 
 首先是Client端的应用层怎么发起RPC，ComsumerApp：
 
-```
+```java
 public class ComsumerApp {
     public static void main(String[] args) {
         Calculator calculator = new CalculatorRemoteImpl();
@@ -45,7 +45,7 @@ public class ComsumerApp {
 
 通过一个CalculatorRemoteImpl，我们把RPC的逻辑封装进去了，客户端调用时感知不到远程调用的麻烦。下面再来看看CalculatorRemoteImpl，代码有些多，但是其实就是把上面的2、3、4几个步骤用代码实现了而已，CalculatorRemoteImpl：
 
-```
+```java
 public class CalculatorRemoteImpl implements Calculator {
     public int add(int a, int b) {
         List<String> addressList = lookupProviders("Calculator.add");
@@ -89,7 +89,7 @@ add方法的前面两行，lookupProviders和chooseTarget，可能大家会觉�
 
 最后再来看看Server端的实现，和Client端非常类似，ProviderApp：
 
-```
+```java
 public class ProviderApp {
     private Calculator calculator = new CalculatorImpl();
 
@@ -153,7 +153,7 @@ Server端主要是通过ServerSocket的accept方法，来接收Client端的请�
 
 那该如何解决呢？先来看看使用Dubbo时是如何实现RPC调用的：
 
-```
+```java
 @Reference
 private Calculator calculator;
 
@@ -169,7 +169,7 @@ Dubbo通过和Spring的集成，在Spring容器初始化的时候，如果扫描
 我们可以先不和Spring集成，也就是先不采用依赖注入，但是我们要做到像Dubbo一样，无需自己手动写代理对象，怎么做呢？那自然是要求所有的远程调用都遵循一套模板，把远程调用的信息放到一个RpcRequest对象里面，发给Server端，Server端解析之后就知道你要调用的是哪个RPC接口、以及入参是什么类型、入参的值又是什么，就像Dubbo的RpcInvocation：
 
 
-```
+```java
 public class RpcInvocation implements Invocation, Serializable {
 
     private static final long serialVersionUID = -4355285085441097045L;
