@@ -1,7 +1,7 @@
 
 ## 编程结构
 
-```
+```java
 public class SocketTextStreamWordCount {
 
 	public static void main(String[] args) throws Exception {
@@ -74,7 +74,7 @@ System.err.println("USAGE:\nSocketTextStreamWordCount <hostname> <port>");
 
 #### 代码示例
 
-```
+```java
 ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 
 // 从本地文件系统读
@@ -118,7 +118,7 @@ env.createInput(JDBCInputFormat.buildJDBCInputFormat()                    .setDr
 
 
 采用一个数据元并生成一个数据元。
-```
+```java
 data.map(new MapFunction<String, Integer>() {
   public Integer map(String value) { return Integer.parseInt(value); }
 });
@@ -140,7 +140,7 @@ data.flatMap(new FlatMapFunction<String, String>() {
 
 
 在单个函数调用中转换并行分区。该函数将分区作为Iterable流来获取，并且可以生成任意数量的结果值。每个分区中的数据元数量取决于并行度和先前的 算子操作。
-```
+```java
 data.mapPartition(new MapPartitionFunction<String, Long>() {
   public void mapPartition(Iterable<String> values, Collector<Long> out) {
     long c = 0;
@@ -155,7 +155,7 @@ data.mapPartition(new MapPartitionFunction<String, Long>() {
 
 计算每个数据元的布尔函数，并保存函数返回true的数据元。
 重要信息：系统假定该函数不会修改应用谓词的数据元。违反此假设可能会导致错误的结果。
-```
+```java
 data.filter(new FilterFunction<Integer>() {
   public boolean filter(Integer value) { return value > 1000; }
 });
@@ -163,7 +163,7 @@ data.filter(new FilterFunction<Integer>() {
 * Reduce	
 
 通过将两个数据元重复组合成一个数据元，将一组数据元组合成一个数据元。Reduce可以应用于完整数据集或分组数据集。
-```
+```java
 data.reduce(new ReduceFunction<Integer> {
   public Integer reduce(Integer a, Integer b) { return a + b; }
 });
@@ -175,7 +175,7 @@ data.reduce(new ReduceFunction<Integer> {
 
 将一组数据元组合成一个或多个数据元。ReduceGroup可以应用于完整数据集或分组数据集。
 
-```
+```java
 data.reduceGroup(new GroupReduceFunction<Integer, Integer> {
   public void reduce(Iterable<Integer> values, Collector<Integer> out) {
     int prefixSum = 0;
@@ -192,21 +192,21 @@ data.reduceGroup(new GroupReduceFunction<Integer, Integer> {
 
 将一组值聚合为单个值。聚合函数可以被认为是内置的reduce函数。聚合可以应用于完整数据集或分组数据集。
 
-```
+```java
 Dataset<Tuple3<Integer, String, Double>> input = // [...]
 DataSet<Tuple3<Integer, String, Double>> output = input.aggregate(SUM, 0).and(MIN, 2);
 ```
 
 您还可以使用简写语法进行最小，最大和总和聚合。
 
-```
+```java
 Dataset<Tuple3<Integer, String, Double>> input = // [...]
 DataSet<Tuple3<Integer, String, Double>> output = input.sum(0).andMin(2);
 ```
 * Distinct	
 
 返回数据集的不同数据元。它相对于数据元的所有字段或字段子集从输入DataSet中删除重复条目。
-```
+```java
 data.distinct();
 ```
 使用reduce函数实现Distinct。您可以通过提供CombineHintto 来指定运行时执行reduce的组合阶段的方式 setCombineHint。在大多数情况下，基于散列的策略应该更快，特别是如果不同键的数量与输入数据元的数量相比较小（例如1/10）。
@@ -215,7 +215,7 @@ data.distinct();
 
 通过创建在其键上相等的所有数据元对来连接两个数据集。可选地使用JoinFunction将数据元对转换为单个数据元，或使用FlatJoinFunction将数据元对转换为任意多个（包括无）数据元。请参阅键部分以了解如何定义连接键。
 
-```
+```java
 result = input1.join(input2)
                .where(0)       // key of the first input (tuple field 0)
                .equalTo(1);    // key of the second input (tuple field 1)
@@ -224,7 +224,7 @@ result = input1.join(input2)
 您可以通过Join Hints指定运行时执行连接的方式。提示描述了通过分区或广播进行连接，以及它是使用基于排序还是基于散列的算法。
 如果未指定提示，系统将尝试估算输入大小，并根据这些估计选择最佳策略。
 
-```
+```java
 // This executes a join by broadcasting the first data set
 // using a hash table for the broadcast data
 result = input1.join(input2, JoinHint.BROADCAST_HASH_FIRST)
@@ -237,7 +237,7 @@ result = input1.join(input2, JoinHint.BROADCAST_HASH_FIRST)
 
 在两个数据集上执行左，右或全外连接。外连接类似于常规（内部）连接，并创建在其键上相等的所有数据元对。此外，如果在另一侧没有找到匹配的Keys，则保存“外部”侧（左侧，右侧或两者都满）的记录。匹配数据元对（或一个数据元和null另一个输入的值）被赋予JoinFunction以将数据元对转换为单个数据元，或者转换为FlatJoinFunction以将数据元对转换为任意多个（包括无）数据元。请参阅键部分以了解如何定义连接键。
 
-```
+```java
 input1.leftOuterJoin(input2) // rightOuterJoin or fullOuterJoin for right or full outer joins
       .where(0)              // key of the first input (tuple field 0)
       .equalTo(1)            // key of the second input (tuple field 1)
@@ -257,7 +257,7 @@ input1.leftOuterJoin(input2) // rightOuterJoin or fullOuterJoin for right or ful
 
 reduce 算子操作的二维变体。将一个或多个字段上的每个输入分组，然后关联组。每对组调用转换函数。
 
-```
+```java
 data1.coGroup(data2)
      .where(0)
      .equalTo(1)
@@ -273,7 +273,7 @@ data1.coGroup(data2)
 
 构建两个输入的笛卡尔积（交叉乘积），创建所有数据元对。可选择使用CrossFunction将数据元对转换为单个数据元
 
-```
+```java
 DataSet<Integer> data1 = // [...]
 DataSet<String> data2 = // [...]
 DataSet<Tuple2<Integer, String>> result = data1.cross(data2);
@@ -286,7 +286,7 @@ DataSet<Tuple2<Integer, String>> result = data1.cross(data2);
 
 生成两个数据集的并集。
 
-```
+```java
 DataSet<String> data1 = // [...]
 DataSet<String> data2 = // [...]
 DataSet<String> result = data1.union(data2);
@@ -297,7 +297,7 @@ DataSet<String> result = data1.union(data2);
 
 均匀地Rebalance 数据集的并行分区以消除数据偏差。只有类似Map的转换可能会遵循Rebalance 转换。
 
-```
+```java
 DataSet<String> in = // [...]
 DataSet<String> result = in.rebalance()
                            .map(new Mapper());
@@ -309,7 +309,7 @@ DataSet<String> result = in.rebalance()
 
 散列分区给定键上的数据集。键可以指定为位置键，表达键和键选择器函数。
 
-```
+```java
 DataSet<Tuple2<String,Integer>> in = // [...]
 DataSet<Integer> result = in.partitionByHash(0)
                             .mapPartition(new PartitionMapper());
@@ -320,7 +320,7 @@ DataSet<Integer> result = in.partitionByHash(0)
 
 Range-Partition给定键上的数据集。键可以指定为位置键，表达键和键选择器函数。
 
-```
+```java
 DataSet<Tuple2<String,Integer>> in = // [...]
 DataSet<Integer> result = in.partitionByRange(0)
                             .mapPartition(new PartitionMapper());
@@ -332,7 +332,7 @@ DataSet<Integer> result = in.partitionByRange(0)
 手动指定数据分区。 
 注意：此方法仅适用于单个字段键。
 
-```
+```java
 DataSet<Tuple2<String,Integer>> in = // [...]
 DataSet<Integer> result = in.partitionCustom(Partitioner<K> partitioner, key)
 ```
@@ -342,7 +342,7 @@ DataSet<Integer> result = in.partitionCustom(Partitioner<K> partitioner, key)
 
 本地按指定顺序对指定字段上的数据集的所有分区进行排序。可以将字段指定为元组位置或字段表达式。通过链接sortPartition（）调用来完成对多个字段的排序。
 
-```
+```java
 DataSet<Tuple2<String,Integer>> in = // [...]
 DataSet<Integer> result = in.sortPartition(1, Order.ASCENDING)
                             .mapPartition(new PartitionMapper());
@@ -353,7 +353,7 @@ DataSet<Integer> result = in.sortPartition(1, Order.ASCENDING)
 
 返回数据集的前n个（任意）数据元。First-n可以应用于常规数据集，分组数据集或分组排序数据集。分组键可以指定为键选择器函数或字段位置键。
 
-```
+```java
 DataSet<Tuple2<String,Integer>> in = // [...]
 // regular data set
 DataSet<Tuple2<String,Integer>> result1 = in.first(3);
@@ -379,7 +379,7 @@ DataSet<Tuple2<String,Integer>> result3 = in.groupBy(0)                         
 
 示例：
 
-```
+```java
 // text data
 DataSet<String> textData = // [...]
 
@@ -410,7 +410,7 @@ values.writeAsFormattedText("file:///path/to/the/result/file",
 
 使用自定义输出格式：
 
-```
+```java
 DataSet<Tuple3<String, Integer, Double>> myResult = [...]
 
 // write Tuple DataSet to a relational database
@@ -434,7 +434,7 @@ myResult.output(
 
 * 使用方法：ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 
-```
+```java
 使用avro序列化：env.getConfig().enableForceAvro();
 使用kryo序列化：env.getConfig().enableForceKryo();
 使用自定义序列化：env.getConfig().addDefaultKryoSerializer(Class<?> type, Class<? extends Serializer<?>> serializerClass)

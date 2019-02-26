@@ -6,7 +6,7 @@ DataStreamAPI和DataSetAPI主要的区别在于Transformation部分。
 ### map
 * DataStream→DataStream
 用一个数据元生成一个数据元。一个map函数，它将输入流的值加倍：
-```
+```java
 DataStream<Integer> dataStream = //...
 dataStream.map(new MapFunction<Integer, Integer>() {
     @Override
@@ -22,7 +22,7 @@ dataStream.map(new MapFunction<Integer, Integer>() {
 
 采用一个数据元并生成零个，一个或多个数据元。将句子分割为单词的flatmap函数：
 
-```
+```java
 dataStream.flatMap(new FlatMapFunction<String, String>() {
     @Override
     public void flatMap(String value, Collector<String> out)
@@ -38,7 +38,7 @@ dataStream.flatMap(new FlatMapFunction<String, String>() {
 * DataStream→DataStream	
 计算每个数据元的布尔函数，并保存函数返回true的数据元。过滤掉零值的过滤器：
 
-```
+```java
 dataStream.filter(new FilterFunction<Integer>() {
     @Override
     public boolean filter(Integer value) throws Exception {
@@ -54,7 +54,7 @@ dataStream.filter(new FilterFunction<Integer>() {
 
 此转换返回KeyedStream，其中包括使用被Keys化状态所需的KeyedStream。
 
-```
+```java
 dataStream.keyBy("someKey") // Key by field "someKey"
 dataStream.keyBy(0) // Key by the first element of a Tuple
 ```
@@ -73,7 +73,7 @@ KeyedStream→DataStream
 将当前数据元与最后一个Reduce的值组合并发出新值。 
 例如：reduce函数，用于创建部分和的流：
 
-```
+```java
 keyedStream.reduce(new ReduceFunction<Integer>() {
     @Override
     public Integer reduce(Integer value1, Integer value2)
@@ -89,7 +89,7 @@ KeyedStream→DataStream
 
 折叠函数，当应用于序列（1,2,3,4,5）时，发出序列“start-1”，“start-1-2”，“start-1-2-3”,. ..
 
-```
+```java
 DataStream<String> result =
   keyedStream.fold("start", new FoldFunction<Integer, String>() {
     @Override
@@ -104,7 +104,7 @@ DataStream<String> result =
 
 在被Keys化数据流上滚动聚合。min和minBy之间的差异是min返回最小值，而minBy返回该字段中具有最小值的数据元(max和maxBy相同)。
 
-```
+```java
 keyedStream.sum(0);
 keyedStream.sum("key");
 keyedStream.min(0);
@@ -126,7 +126,7 @@ KeyedStream→WindowedStream
 
 可以在已经分区的KeyedStream上定义Windows。Windows根据某些特征（例如，在最后5秒内到达的数据）对每个Keys中的数据进行分组。
 
-```
+```java
 dataStream.keyBy(0)
 .window(TumblingEventTimeWindows
 .of(Time.seconds(5))); // Last 5 seconds of data
@@ -140,7 +140,7 @@ AllWindowedStream→DataStream
 
 注意：如果您正在使用windowAll转换，则需要使用AllWindowFunction。
 
-```
+```java
 windowedStream.apply (new WindowFunction<Tuple2<String,Integer>, Integer, Tuple, Window>() {
     public void apply (Tuple tuple,
             Window window,
@@ -174,7 +174,7 @@ WindowedStream→DataStream
 
 将reduce函数应用于窗口并返回reduce后的值。
 
-```
+```java
 windowedStream.reduce (new ReduceFunction<Tuple2<String,Integer>>() {
     public Tuple2<String, Integer> reduce(Tuple2<String, Integer> value1, Tuple2<String, Integer> value2) throws Exception {
         return new Tuple2<String,Integer>(value1.f0, value1.f1 + value2.f1);
@@ -190,7 +190,7 @@ DataStream→DataStream
 
 从记录中提取时间戳，以便使用使用事件时间语义的窗口。
 
-```
+```java
 stream.assignTimestamps (new TimeStampExtractor() {...});
 ```
 
@@ -200,7 +200,7 @@ stream.assignTimestamps (new TimeStampExtractor() {...});
 DataStream→DataStream	
 使用用户定义的分区程序为每个数据元选择目标任务。
 
-```
+```java
 dataStream.partitionCustom(partitioner, "someKey");
 dataStream.partitionCustom(partitioner, 0);
 ```
@@ -208,16 +208,16 @@ dataStream.partitionCustom(partitioner, 0);
 * 随机分区
 DataStream→DataStream	
 根据均匀分布随机分配数据元。
-```
+```java
 dataStream.shuffle();
-```     
+```
+   
 * Rebalance （循环分区）
 DataStream→DataStream	
 分区数据元循环，每个分区创建相等的负载。在存在数据倾斜时用于性能优化。
-```
+```java
 dataStream.rebalance();
 ```
-
 * rescale
 DataStream→DataStream
 
@@ -228,13 +228,13 @@ DataStream→DataStream
 请参阅此图以获取上例中连接模式的可视化：
 
 ![5bd63a6c99ad06ba3d96d03be3cb25ff.svg+xml](evernotecid://DF961740-2AB0-48AB-AAE7-53BB9D286C7A/appyinxiangcom/12131181/ENResource/p1410)
-```
+```java
 dataStream.rescale();
 ```
 
 * 广播
 DataStream→DataStream	
 向每个分区广播数据元。
-```
+```java
 dataStream.broadcast();
 ```      
