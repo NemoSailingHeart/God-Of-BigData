@@ -16,17 +16,17 @@
 ## 固定间隔
 
 第一种：全局配置 flink-conf.yaml
-```
-	restart-strategy: fixed-delay 
-	restart-strategy.fixed-delay.attempts: 3 
-	restart-strategy.fixed-delay.delay: 10 s
+```yaml
+restart-strategy: fixed-delay 
+restart-strategy.fixed-delay.attempts: 3 
+restart-strategy.fixed-delay.delay: 10 s
 ```
 第二种：应用代码设置：
 	
-    ```
-    env.setRestartStrategy(RestartStrategies.fixedDelayRestart( 3,// 尝试重启的次数 
-        Time.of(10, TimeUnit.SECONDS) // 间隔 ));
-    ```
+```java
+env.setRestartStrategy(RestartStrategies.fixedDelayRestart( 3,// 尝试重启的次数 
+    Time.of(10, TimeUnit.SECONDS) // 间隔 ));
+```
 
 ## 失败率
 
@@ -35,17 +35,17 @@
 **下面配置是5分钟内若失败了3次则认为该job失败，重试间隔为10s**
 
 第一种：全局配置 flink-conf.yaml
-```
-    restart-strategy: failure-rate  
-	restart-strategy.failure-rate.max-failures-per-interval: 3  
-	restart-strategy.failure-rate.failure-rate-interval: 5 min  
-	restart-strategy.failure-rate.delay: 10 s
+```yaml
+restart-strategy: failure-rate  
+restart-strategy.failure-rate.max-failures-per-interval: 3  
+restart-strategy.failure-rate.failure-rate-interval: 5 min  
+restart-strategy.failure-rate.delay: 10 s
 ```
     
 第二种：应用代码设置
 
 ```
-   env.setRestartStrategy(RestartStrategies.failureRateRestart(  3,//一个时间段内的最大失败次数  
+env.setRestartStrategy(RestartStrategies.failureRateRestart(3,//一个时间段内的最大失败次数  
 Time.of(5, TimeUnit.MINUTES), // 衡量失败次数的是时间段  Time.of(10, TimeUnit.SECONDS) // 间隔  ));
 ```
 
@@ -53,12 +53,12 @@ Time.of(5, TimeUnit.MINUTES), // 衡量失败次数的是时间段  Time.of(10, 
 
 第一种：全局配置 flink-conf.yaml
 
-```
+```yaml
 	restart-strategy: none
 ```
 
 第二种：应用代码设置
-```
+```java
 ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment(); 	env.setRestartStrategy(RestartStrategies.noRestart());
 
 ```
@@ -66,7 +66,7 @@ ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment(); 	env.
 
 ## 实际代码演示
 
-```
+```java
 public class RestartTest {
 
     public static void main(String[] args) {
